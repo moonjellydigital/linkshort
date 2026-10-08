@@ -134,11 +134,11 @@ Verified in a Linux environment without Docker:
 - The bundled API and migrator run correctly. Re-running migrations is a
   no-op, and SIGTERM shuts down cleanly.
 - The full Playwright suite (18 tests) passes against the bundled app at
-  `http://app:…`, a non-secure context as in Compose. It also passed 54 of 54
+  `http://web:…`, a non-secure context as in Compose. It also passed 54 of 54
   with 4 workers and 3 repeats. The real-clipboard branch passes on `localhost`.
 - `compose.yaml` validates with Docker Compose v5.6.0.
 
 **Not yet verified:** the images building, and the stack running under
-Docker, locally or in the sandbox. The local e2e run used Playwright 1.63
+Docker, in the sandbox. The local e2e run used Playwright 1.63
 with an older preinstalled Chromium, while the container uses the matching
 browser from the `v1.63.0-noble` image.
