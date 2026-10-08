@@ -1,6 +1,6 @@
 # linkshort
 
-A deliberately small full-stack TypeScript app (link shortener with click
+A deliberately small full-stack TypeScript web (link shortener with click
 counts) whose real purpose is to answer one question:
 
 > Does a Compose-based e2e suite run reliably inside a Docker Cloud Sandbox?
@@ -21,9 +21,9 @@ limitation directly.
    module (`packages/shared/src/wait-for.ts`): bounded exponential backoff,
    per-attempt timeouts, and a hard deadline so a stuck dependency fails the
    run instead of consuming the sandbox TTL.
-   - `migrate` and `app` wait for Postgres with a real `select 1`, not a port check.
+   - `migrate` and `web` wait for Postgres with a real `select 1`, not a port check.
    - Playwright's `globalSetup` waits for `GET /readyz`.
-3. **Ordering via exit codes.** `app` depends on `migrate` with
+3. **Ordering via exit codes.** `web` depends on `migrate` with
    `service_completed_successfully`, which keys off a main-process exit status.
 4. **Fully offline at test time.** No web fonts, no CDNs. Redirects are
    asserted without being followed, and browsers ship in the Playwright image.
@@ -33,7 +33,7 @@ limitation directly.
 
 ```
 compose.yaml            single file: dev + e2e (profile), no healthchecks
-Dockerfile              targets: runtime (app + migrate), e2e (Playwright)
+Dockerfile              targets: runtime (web + migrate), e2e (Playwright)
 scripts/e2e.sh          isolated, self-cleaning e2e run
 scripts/exec-canary.sh  detects the exec/healthcheck limitation
 packages/
@@ -43,7 +43,7 @@ packages/
   e2e/      Playwright suite incl. axe-core WCAG 2.2 AA scans
 ```
 
-Services: `db` (Postgres 18) → `migrate` (one-shot) → `app` (API + UI) → `e2e`.
+Services: `db` (Postgres 18) → `migrate` (one-shot) → `web` (API + UI) → `e2e`.
 
 ## Running it
 
@@ -80,8 +80,8 @@ pnpm --filter @linkshort/web dev            # Vite with /api proxied to :3000
 | --- | --- | --- |
 | `APP_HOST_IP` | compose | `127.0.0.1` (set `0.0.0.0` if a port forwarder needs it) |
 | `APP_PORT` | compose | `3000` (`0` = any free port) |
-| `LOG_LEVEL` | app | `info` |
-| `DB_READY_TIMEOUT_MS` | app, migrate | `60000` |
+| `LOG_LEVEL` | web | `info` |
+| `DB_READY_TIMEOUT_MS` | web, migrate | `60000` |
 | `APP_READY_TIMEOUT_MS` | e2e | `120000` |
 
 ## Evaluating it in a Docker Cloud Sandbox
