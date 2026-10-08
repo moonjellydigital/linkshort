@@ -1,0 +1,7 @@
+packages:
+  - packages/*
+
+# pnpm refuses unapproved install scripts. esbuild's postinstall only verifies
+# its platform binary (provided by an optional dependency).
+allowBuilds:
+  esbuild: true

@@ -1,0 +1,88 @@
+# linkshort: one Compose file for local dev and e2e, laptop and cloud sandbox.
+#
+# Docker Cloud Sandboxes route `docker exec`, `docker compose exec` and
+# container healthchecks to the sandbox VM's filesystem rather than the
+# container's, so this file deliberately uses NONE of them:
+#
+#   - no `healthcheck:` blocks and no `condition: service_healthy`
+#   - readiness is checked by each consumer, over the network, from its own
+#     main process (see packages/shared/src/wait-for.ts)
+#   - ordering that matters uses `service_completed_successfully`, which keys
+#     off a one-shot container's main-process exit code
+#
+# Usage
+#   dev:  docker compose up --build             → http://localhost:3000
+#   e2e:  ./scripts/e2e.sh                      (isolated project, cleans up)
+#
+# Variables (all optional)
+#   APP_HOST_IP  interface to publish the app on   (default 127.0.0.1)
+#   APP_PORT     host port; 0 picks a free port     (default 3000)
+#   LOG_LEVEL    app log level                      (default info)
+
+name: linkshort
+
+x-app-image: &app-image
+  build:
+    context: .
+    target: runtime
+  image: linkshort/app:local
+
+x-db-url: &db-url
+  DATABASE_URL: postgres://linkshort:linkshort@db:5432/linkshort
+
+services:
+  db:
+    image: postgres:18.6-bookworm
+    environment:
+      POSTGRES_USER: linkshort
+      POSTGRES_PASSWORD: linkshort
+      POSTGRES_DB: linkshort
+    volumes:
+      # Postgres 18+ images keep data under /var/lib/postgresql/<major>/docker;
+      # mount the parent, not the pre-18 /var/lib/postgresql/data path.
+      - db-data:/var/lib/postgresql
+    # Not published: everything reaches it over the Compose network.
+
+  migrate:
+    <<: *app-image
+    command: ["node", "--enable-source-maps", "dist/migrate.mjs"]
+    environment:
+      <<: *db-url
+    # "Started" is enough: migrate waits for Postgres itself.
+    depends_on: [db]
+    restart: "no"
+
+  web:
+    <<: *app-image
+    environment:
+      <<: *db-url
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    ports:
+      - "${APP_HOST_IP:-127.0.0.1}:${APP_PORT:-3000}:3000"
+    init: true
+    stop_grace_period: 10s
+
+  e2e:
+    profiles: [e2e]
+    build:
+      context: .
+      target: e2e
+    image: linkshort/e2e:local
+    environment:
+      BASE_URL: http://web:3000
+      CI: "1"
+    # "Started" is enough: Playwright's globalSetup polls /readyz.
+    depends_on: [web]
+    init: true
+    # Chromium needs more than the 64 MB default /dev/shm.
+    shm_size: "1gb"
+    volumes:
+      # Bind mounts are set up by the container runtime, not via exec, so
+      # they work in the cloud sandbox. Copy results out with `sbx --cloud cp`.
+      - ./e2e-results:/repo/packages/e2e/results
+
+volumes:
+  db-data:

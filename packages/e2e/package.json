@@ -1,0 +1,19 @@
+{
+  "name": "@linkshort/e2e",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Playwright end-to-end suite. Runs in its own container against the Compose network.",
+  "scripts": {
+    "test": "echo 'e2e runs via ./scripts/e2e.sh (Docker Compose)'",
+    "e2e": "playwright test",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.13.0",
+    "@linkshort/shared": "workspace:*",
+    "@playwright/test": "1.63.0",
+    "@types/node": "24.13.6",
+    "typescript": "7.0.2"
+  }
+}

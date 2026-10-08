@@ -1,0 +1,256 @@
+/*
+ * linkshort: transit-ticket motif.
+ * One bold element (the new-link ticket with its yellow stub); everything
+ * else is quiet ink on cool paper. System font stacks only: the app must
+ * render fully offline (sandbox network policy blocks web fonts).
+ */
+:root {
+  --paper: #eef2ef;
+  --surface: #ffffff;
+  --ink: #0e2a33;
+  --ink-soft: #3d5660;
+  --rule: #c5d1cc;
+  --signal: #f4c430;
+  --link: #0f5e8c;
+  --error: #a4262c;
+  --focus: #0f5e8c;
+
+  --font-display: "Avenir Next Condensed", "Roboto Condensed", "Arial Narrow", "Helvetica Neue", sans-serif;
+  --font-body: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+
+  /* Modular scale, ratio 1.25 */
+  --step--1: 0.875rem;
+  --step-0: 1rem;
+  --step-1: 1.25rem;
+  --step-2: 1.5625rem;
+  --step-4: 2.441rem;
+
+  --radius-control: 6px;
+  --radius-ticket: 14px;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #0e1a1e;
+    --surface: #142429;
+    --ink: #e6eeea;
+    --ink-soft: #a9bcb6;
+    --rule: #2c3f44;
+    --link: #7cc4ee;
+    --error: #ff8a80;
+    --focus: #7cc4ee;
+    color-scheme: dark;
+  }
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font: 400 var(--step-0)/1.5 var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: var(--link); text-underline-offset: 0.18em; }
+
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.visually-hidden {
+  position: absolute !important;
+  inline-size: 1px; block-size: 1px;
+  margin: -1px; padding: 0; border: 0;
+  overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+}
+
+/* Layout ------------------------------------------------------------------ */
+
+.masthead, .page {
+  inline-size: min(100% - 2rem, 60rem);
+  margin-inline: auto;
+}
+.masthead { padding-block: 1.5rem 0.5rem; }
+.wordmark {
+  margin: 0;
+  font: 700 var(--step-1)/1 var(--font-display);
+  letter-spacing: 0.01em;
+}
+.wordmark::before {
+  content: "";
+  display: inline-block;
+  inline-size: 0.9em; block-size: 0.35em;
+  margin-inline-end: 0.4em;
+  background: var(--signal);
+  border-radius: 2px;
+  vertical-align: 0.2em;
+}
+.page { display: grid; gap: 2.5rem; padding-block: 1.5rem 4rem; }
+
+h2 { margin: 0; font: 700 var(--step-2)/1.1 var(--font-display); }
+
+/* Form -------------------------------------------------------------------- */
+
+.create {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: 1rem 1.25rem;
+  align-items: start;
+}
+.create h2, .create .actions, .form-error { grid-column: 1 / -1; }
+@media (max-width: 40rem) { .create { grid-template-columns: 1fr; } }
+
+.field { display: grid; gap: 0.35rem; }
+label { font-weight: 600; }
+.optional { font-weight: 400; color: var(--ink-soft); }
+
+input {
+  inline-size: 100%;
+  min-block-size: 2.75rem;
+  padding: 0.5rem 0.75rem;
+  font: inherit;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--ink-soft);
+  border-radius: var(--radius-control);
+}
+input[aria-invalid="true"] { border-color: var(--error); border-width: 2px; }
+
+.field-hint, .field-error, .form-error { margin: 0; font-size: var(--step--1); }
+.field-hint { color: var(--ink-soft); }
+.field-error, .form-error { color: var(--error); font-weight: 600; }
+
+/* Buttons ----------------------------------------------------------------- */
+
+.button {
+  min-block-size: 2.75rem;
+  padding: 0.5rem 1.1rem;
+  font: 600 var(--step-0)/1 var(--font-body);
+  border-radius: var(--radius-control);
+  cursor: pointer;
+}
+.button-primary { color: var(--paper); background: var(--ink); border: 1px solid var(--ink); }
+.button-primary:hover { background: var(--ink-soft); }
+.button-primary:disabled { opacity: 0.7; cursor: progress; }
+.button-quiet {
+  min-block-size: 2.25rem;
+  padding: 0.35rem 0.7rem;
+  color: var(--ink);
+  background: transparent;
+  border: 1px solid var(--rule);
+  font-size: var(--step--1);
+}
+.button-quiet:hover { border-color: var(--ink-soft); }
+
+/* Ticket: the one bold element -------------------------------------------- */
+
+.ticket {
+  --notch: 11px;
+  display: grid;
+  grid-template-columns: 1.25rem minmax(0, 1fr) auto;
+  align-items: center;
+  background: var(--surface);
+  border-radius: var(--radius-ticket);
+  /* Perforation notches where the stub meets the body. */
+  mask: radial-gradient(circle var(--notch) at 1.25rem 0, #0000 98%, #000) top / 100% 51% no-repeat,
+        radial-gradient(circle var(--notch) at 1.25rem 100%, #0000 98%, #000) bottom / 100% 51% no-repeat;
+  animation: ticket-in 280ms ease-out;
+}
+.ticket-stub {
+  align-self: stretch;
+  background: var(--signal);
+  border-inline-end: 2px dashed var(--paper);
+}
+.ticket-body { padding: 1.25rem 1.5rem; min-inline-size: 0; }
+.ticket-title { font: 600 var(--step--1)/1.2 var(--font-body); color: var(--ink-soft); }
+.ticket-link {
+  margin: 0.25rem 0 0;
+  font: 700 var(--step-4)/1.05 var(--font-display);
+  overflow-wrap: anywhere;
+}
+.ticket-link a { color: var(--ink); text-decoration-thickness: 2px; }
+.ticket-dest { margin: 0.5rem 0 0; color: var(--ink-soft); overflow-wrap: anywhere; }
+.ticket-dest .dest { color: var(--ink); }
+.ticket-action { padding-inline-end: 1.5rem; }
+@media (max-width: 40rem) {
+  .ticket { grid-template-columns: 1rem minmax(0, 1fr); }
+  .ticket-action { grid-column: 2; padding: 0 1.5rem 1.25rem; }
+}
+@keyframes ticket-in { from { transform: translateY(-6px); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .ticket { animation: none; } }
+
+/* List -------------------------------------------------------------------- */
+
+.list { display: grid; gap: 1rem; }
+.list-head { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; }
+.empty, .muted { color: var(--ink-soft); }
+.empty { margin: 0; padding: 1.5rem 0; border-block: 1px solid var(--rule); }
+.load-error { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; color: var(--error); }
+.load-error p { margin: 0; font-weight: 600; }
+
+.table-scroll { overflow-x: auto; }
+.links { inline-size: 100%; border-collapse: collapse; table-layout: fixed; font-variant-numeric: tabular-nums; }
+/* Fixed layout: column widths come from here, not from cell content, so long
+   slugs wrap and long destinations truncate instead of widening the table. */
+.col-slug { inline-size: 27%; }
+.col-clicks { inline-size: 4.5rem; }
+.col-last { inline-size: 8.5rem; }
+.col-actions { inline-size: 15rem; }
+.links th, .links td { padding: 0.7rem 0.75rem; text-align: start; vertical-align: middle; border-block-end: 1px solid var(--rule); }
+.links thead th { font-size: var(--step--1); font-weight: 600; color: var(--ink-soft); border-block-end-color: var(--ink-soft); }
+.links .num { text-align: end; }
+.slug-cell { font: 700 var(--step-1)/1.15 var(--font-display); overflow-wrap: anywhere; }
+.dest-cell .dest { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.last-cell, .links thead th { white-space: nowrap; }
+.row-actions { display: flex; gap: 0.5rem; justify-content: flex-end; white-space: nowrap; }
+.stacked-label { display: none; }
+
+/*
+ * Narrow screens: each row becomes a small stacked block. Changing a table's
+ * display strips its semantics in some browsers, so the markup carries
+ * explicit table roles to keep it a table for assistive technology.
+ */
+@media (max-width: 40rem) {
+  .links, .links tbody { display: block; }
+  .links thead {
+    position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%);
+  }
+  .links tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: "slug clicks" "dest dest" "last actions";
+    gap: 0.3rem 0.75rem;
+    padding-block: 0.85rem;
+    border-block-end: 1px solid var(--rule);
+  }
+  .links th, .links td { display: block; padding: 0; border: 0; }
+  .links .slug-cell { grid-area: slug; align-self: baseline; }
+  .links .clicks-cell { grid-area: clicks; align-self: baseline; }
+  .links .dest-cell { grid-area: dest; color: var(--ink-soft); }
+  .links .last-cell { grid-area: last; align-self: center; min-inline-size: 0; white-space: normal; font-size: var(--step--1); color: var(--ink-soft); }
+  .links .actions-cell { grid-area: actions; }
+  .links .stacked-label { display: inline; }
+  .links tr.daily-row-wrap { display: block; padding: 0; }
+  .links tr.daily-row-wrap > td { padding: 1rem 0.75rem; }
+  .daily-row { grid-template-columns: 6.5rem minmax(0, 1fr) 2.5rem; }
+}
+
+/* Daily clicks ------------------------------------------------------------ */
+
+.daily-row-wrap > td { background: var(--surface); }
+.daily-title { margin: 0 0 0.75rem; font: 600 var(--step--1)/1.3 var(--font-body); color: var(--ink-soft); }
+.daily-status { margin: 0; }
+.daily-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.35rem; }
+.daily-row { display: grid; grid-template-columns: 7.5rem minmax(0, 1fr) 3rem; align-items: center; gap: 0.75rem; }
+.daily-bar { block-size: 0.6rem; background: var(--paper); border-radius: 999px; overflow: hidden; }
+.daily-bar > span { display: block; block-size: 100%; background: var(--ink); border-radius: inherit; }
+.daily-count { text-align: end; }
+
+@media (forced-colors: active) {
+  .ticket-stub, .daily-bar > span { background: CanvasText; }
+  .ticket { mask: none; border: 2px solid CanvasText; }
+}
